@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+	<script type="text/javascript" src="ext/build/ext-all.js"></script> 
+	<link rel="stylesheet" type="text/css" href="ext/build/classic/theme-gray/resources/theme-gray-all.css">
+	<script type="text/javascript" src="ext/build/classic/theme-gray/theme-gray.js"></script>
+	<SCRIPT type="text/javascript" src="ext/build/classic/locale/locale-ru.js"></SCRIPT>
+	<SCRIPT type="text/javascript" src="ext/build/classic/locale/locale-en.js"></SCRIPT>
+	<SCRIPT type="text/javascript" src="ext/build/classic/locale/locale-ukr.js"></SCRIPT>
+	<link rel="stylesheet" type="text/css" href="ext/build/packages/charts/classic/classic/resources/charts-all.css">
+
+<script type="text/javascript" src="ext/build/packages/charts/classic/charts.js"></script>
+	 <script type="text/javascript">
+	 Ext.onReady(function(){
+	 Ext.tip.QuickTipManager.init();
+	 Ext.define('model', {
+    extend: 'Ext.data.Model',
+    fields: ['id', 'value']
+	});
+	var store=Ext.create('Ext.data.TreeStore', {
+		root:{
+			text:'Страны СНГ',
+			expanded:true,
+			children:[
+				{
+				 text: "Россия",
+                children: [{
+                    text: "Москва",
+                    leaf: true//нет дочерних элементов
+                }, {
+                    text: "Санкт-Петербург",
+                    leaf: true
+                }, {
+                    text: "Волгоград",
+                    leaf: true
+                }],
+                leaf: false,
+                "expanded": true//узел раскрыт
+				},
+				{
+                text: "Украина",
+                leaf: false,
+				children: [{
+                    text: "Киев",
+                    leaf: true
+                }, {
+                    text: "Харьков",
+                    leaf: true
+                }, {
+                    text: "Днепр",
+                    leaf: true
+                }],
+            },
+            {
+                text: "Белоруссия"
+            }
+			],
+		},
+		/*sorters: [{//сортировка
+            property: 'text',
+            direction: 'ASC'
+        }]*/
+	});
+	Ext.create('Ext.Button',{
+		text:'сортировать',
+		handler:function(){
+			store.sort('text', 'ASC');//сортировать по кнопке
+		},
+		renderTo:'test1',
+	})
+	 var tree =Ext.create('Ext.tree.Panel',{
+		title:'Страны СНГ',
+		width:200,
+		rootVisible:true,//виден корневой узел
+		store:store,
+		/*listeners:{
+			itemclick(tree,record,item,index,e,options){
+			var NodeText=record.data.text;
+			var newElement={
+			   tag:'h3',
+			   html:NodeText
+			   }
+			Ext.DomHelper.append(panel1, newElement);
+			}
+		}
+		viewConfig: {
+            plugins: {
+                ptype: 'treeviewdragdrop'
+            }
+        }*/
+	 });
+	 var example  = Ext.create('Ext.data.Store',{
+        model: 'model',
+        autoLoad: true,
+		proxy: {
+            type: 'ajax',
+            url: 'datastore.php?example=1',
+            reader: {
+                type: 'json',
+                root: 'rows'
+            }
+        }
+		});
+	var panel1=	Ext.create('Ext.panel.Panel', {
+		title:'Вложенная панель',
+		xtype:panel,
+		id:'vlvkladka',
+		width:200,
+		items:[{
+			xtype:'textfield',
+			margin:10,
+			id:'text',
+			height:20
+		},
+		{
+			xtype:'button',
+			margin:10,
+			width:70,
+			height:20,
+			text:'Добавить',
+			handler:function(){
+				var newNode=panel1.getComponent('text').getValue();
+				alert(newNode);
+				tree.getRootNode().appendChild({//добавить узел
+					text:newNode,
+					leaf:true
+				});
+			}
+		},
+		{
+			xtype:'button',
+			margin:10,
+			width:70,
+			height:20,
+			text:'Удалить',
+			handler:function(){
+				var selectNode=tree.getSelectionModel().getSelection()[0];
+				if(selectNode){
+					selectNode.remove(true);
+				}
+			}
+		}
+		],
+		closable:true//закрытие панели
+		})
+	 var panel = Ext.create('Ext.panel.Panel', {
+
+        title : 'Моя панель', 
+
+        width : '100%',
+
+        height: 800,
+
+        renderTo : Ext.getBody(),
+
+        layout : 'border',
+
+        defaults : {
+
+            padding: '3'
+
+        },
+
+        items  : [{
+
+            xtype : 'panel',
+
+            region: 'west',
+
+            title : 'Вложенная первая',
+			collapsible: true,//collapsible можно задать сворачивание
+			collapsed: true,//не отображается при зарузке
+			split:true,//можно менять размер панели
+
+            tbar: [
+
+              { xtype: 'button', text: 'Button 1',enableToggle: true }//при нажатии кнопка окажется во включенном состоянии
+
+            ],
+			items:[tree],
+
+        },{
+
+            xtype : 'panel',
+
+            region: 'center',
+
+            title : 'Вложенная вторая',
+			tools:[
+					{type:'help'},//иконки берутся из стандартного набора, в котором определено всего 25 иконок. Каждая иконка представляет экземпляр класса Ext.panel.Tool 
+					{type:'search'},
+					{type:'add'},
+					{type:'gear'},
+				],
+			height:400,
+			layout:{
+                type: 'hbox',
+                align: 'stretch'
+            },
+			dockedItems:[{
+				xtype:'toolbar',
+				dock:'top',
+				
+				items:[
+					{
+					text:'файл',
+					handler:function(){
+						alert('файл');
+					}
+					},'->','Верхний тулбар'// '->'-Ext.toolbar.Fill - специальный компонент, который растягивается по всей ширине тулбара, которая осталась после вычитания ширины всех остальных его компонентов.
+					]
+					},
+				{
+				xtype:'toolbar',
+				dock:'bottom',
+				items:[
+					{
+					xtype:button,
+					text:'кнопка1',
+					handler:function(){
+						alert('кнопка1');
+					}
+					},'-',// '-' преобразуется в объект Ext.toolbar.Separator. В визуальном плане он создает вертикальную черточку-разделитель.
+					{
+					xtype:button,
+					text:'кнопка2',
+					handler:function(){
+						alert('кнопка2');
+					}
+					},
+					
+				]
+				}
+				],
+			items:[
+			panel1
+			],
+            html  : 'контент контент контент ',
+
+            bbar: [
+
+              { xtype: 'button', text: 'Button 2' },
+
+              { xtype: 'button', text: 'Button 3' },
+			  {xtype: 'combobox', 
+			  fieldLabel: 'Пример',
+			  store: example,
+			  displayField: 'value',
+              valueField: 'id',
+
+              queryMode: 'remote'}
+
+            ],
+
+        },{
+            xtype : 'tabpanel',//вкладки
+
+            region: 'south',
+
+            height: 200,
+
+            title : 'Таб панель',
+			id:'mytabpanel',
+
+            items : [{
+
+                title : 'Первая вкладка',
+
+                html  : 'Контент первой вкладки',
+				   tabConfig: {
+                //всплывающая подсказка
+                tooltip: {
+                    title: 'Заголовок',
+                    width:100,
+                    text: 'Текст'
+                }
+            }
+        },{
+
+                title : 'Вторая вкладка',
+				id:'tab2',
+                html  : 'Контент второй вкладки'
+
+            }]
+
+        }] 
+
+   });
+   tabpanel=Ext.getCmp('mytabpanel');
+   var tab = tabpanel.add({
+				id:'tab3',
+                title: 'Вкладка ' + (tabpanel.items.length + 1),
+                html :'Вкладка ' + (tabpanel.items.length + 1),
+				closable:true,
+            });
+            tabpanel.setActiveTab(tab);//добавить вкладку
+   var elements=Ext.select('#test');
+   elements.update('<b>Hello World!</b>');
+  elements.setStyle({
+    fontFamily: 'Verdana',
+    fontSize: '13px',
+	color:'red',
+    backgroundColor: 'silver',
+});
+var dateField=Ext.create('Ext.form.field.Date', {//выбор даты
+        fieldLabel: 'Выбрать дату',
+        format: 'd/m/Y',
+		maxValue: new Date(2017, 11, 21),//максимальная дата
+        minValue: new Date(2016, 11, 21),//минимальная дата
+		disabledDates: ['19/02/2017', '20/02/2017'],//нельзя выбрать
+		disabledDays:  [0, 6],//нельзя выбрать понедельник и субботу
+        renderTo: Ext.getBody()
+    });
+   //elements.hide();
+   dateField.setValue('02/01/2017');//устанавливает дату при загрузке страницы
+   
+   Ext.onReady(function(){
+    var slider=Ext.create('Ext.slider.Single', {//слайдер
+        fieldLabel: 'Громкость',
+        width: 400,
+        renderTo: 'test1'
+    });
+});
+    Ext.getCmp('tab3').add({//редактор текста
+		title: 'Редактор текста',
+        width:'100%',
+        height:200,
+        layout: 'fit',
+        items: [{
+            xtype: 'htmleditor'
+        }],
+    });  
+	Ext.getCmp('tab2').add({//редактор текста
+	items:[{
+		xtype: 'textareafield',
+		grow      : true,
+		fieldLabel: 'Введите сообщение:',
+		allowBlank:false,
+		emptyText: 'введите текст сообщения',
+		name: 'text'},
+		{
+		xtype: 'textfield',
+		fieldLabel: 'Ваше имя:',
+		allowBlank:false,
+		emptyText: 'введите текст', //подсказка в текстовом поле
+		minLength: 3,
+		maxLength: 15,
+		name: 'name'
+	}]
+		
+    });
+    var newElement={
+   tag:'Button',
+   cls:'class',
+   html:'Текст'
+   }
+   Ext.DomHelper.append(elements, newElement);
+   var button=Ext.get('ext-element-3');
+   button.on('click', function(e,target,options){
+   alert("на кнопку нажали");
+   },this);
+   
+   
+   
+   });
+  
+    </script>
+</head>
+<body>
+	<div id="test">
+	</div>
+	<div id="test1"></div>
+</body>
+</html>
